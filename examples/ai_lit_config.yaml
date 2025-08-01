@@ -7,7 +7,7 @@ list_method: GET
 list_selector: "article.blog-article"     # 列表项选择器
 pagination:
   start_page: 1
-  max_pages: 5                             # 根据实际情况调整最大页数
+  max_pages: 2                             # 根据实际情况调整最大页数
 
 detail_method: GET
 detail_selectors:
