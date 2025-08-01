@@ -5,7 +5,7 @@ def extract_fields(html: str, selectors: dict) -> dict:
     通用字段提取：
       - html: 页面源码
       - selectors: {字段名: CSS selector 或 (selector, attr) 元组}
-    返回一个 dict，每个字段对应提取到的文本或属性值。
+    返回 dict，每个字段对应提取到的文本或属性值。
     """
     soup = BeautifulSoup(html, "html.parser")
     result = {}
