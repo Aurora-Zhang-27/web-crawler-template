@@ -22,7 +22,10 @@ def main():
 
     crawler = crawler_cls(config)
     html_list = crawler.fetch_list()
+    print(f"⚙️ Fetched HTML pages: {len(html_list)}")   # ← 新增
+
     items = crawler.parse_list(html_list)
+    print(f"⚙️ Parsed items: {items}")                  # ← 新增
 
     for item in items:
         html_detail = crawler.fetch_detail(item)
