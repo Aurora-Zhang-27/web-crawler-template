@@ -10,8 +10,8 @@ list_payload:
 list_selector: "div.case-entry"   # 每个案例的容器
 load_more:
   enabled: true
-  step: 20                        # 每次加载 20 条
-  max_items: 200                  # 最多加载 200 条（可根据需要调整）
+  step: 2                        # 每次加载 2 条
+  max_items: 2                  # 最多加载 2 条（可根据需要调整）
 
 detail_method: GET
 detail_selectors:
