@@ -1,0 +1,24 @@
+# AI Litigation Database 爬虫示例配置
+crawler_class: examples.ai_lit_crawler.AILitCrawler
+
+site_name: ai_lit
+list_url: https://www.law.gwu.edu/ai-litigation-database?page={page}
+list_method: GET
+list_selector: "article.blog-article"     # 列表项选择器
+pagination:
+  start_page: 1
+  max_pages: 5                             # 根据实际情况调整最大页数
+
+detail_method: GET
+detail_selectors:
+  title: "h1.page-title"
+  date: "time.published-date"
+  summary: ".field--name-field-summary p"
+  parties: ".field--name-field-parties p"
+  court: ".field--name-field-court p"
+  docket: ".field--name-field-docket p"
+
+concurrency: 3
+rate_limit: 1           # 每次请求间隔 1 秒
+output_path: data/ai_lit.csv
+output_format: csv
