@@ -1,58 +1,73 @@
+# core/crawler.py
 from abc import ABC, abstractmethod
+from typing import List, Dict, Any, Optional
 import pandas as pd
-from core.utils import logger
+import os
+from .utils import logger, ensure_parent_dir
+
 
 class BaseCrawler(ABC):
     """
-    通用爬虫抽象基类。子类需实现 fetch_list/parse_list/fetch_detail/parse_detail。
+    Generic crawler base class.
+    Subclasses must implement: fetch_list, parse_list, fetch_detail, parse_detail.
+    The crawler collects detail records into `self.results` (a list of dicts).
     """
-    def __init__(self, config: dict):
-        self.config = config
-        self.results = []
+
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config or {}
+        self.results: List[Dict[str, Any]] = []
 
     @abstractmethod
-    def fetch_list(self) -> list:
+    def fetch_list(self) -> List[str]:
         """
-        抓取列表页，返回原始响应或 HTML 列表。
+        Fetch list pages and return a list of raw HTML strings (or list-response objects).
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def parse_list(self, html_list) -> list:
+    def parse_list(self, html_list) -> List[str]:
         """
-        解析列表页内容，抽取每条记录的标识或 URL，
-        返回可用于 fetch_detail 的参数列表。
+        Parse list pages and return a list of identifiers or URLs for detail pages.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def fetch_detail(self, item) -> str:
         """
-        抓取单条记录详情页的 HTML 文本。
+        Fetch a single detail page and return its HTML as a string.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def parse_detail(self, html_detail) -> dict:
+    def parse_detail(self, html_detail: str) -> Dict[str, Any]:
         """
-        解析详情页 HTML，返回字段字典，例如 {'title': ..., 'date': ..., ...}
+        Parse detail page HTML and return a dictionary of fields.
         """
-        pass
+        raise NotImplementedError
 
-    def save(self, output_path: str):
+    def save(self, output_path: Optional[str]) -> None:
         """
-        将 self.results（列表[dict]）转换为 DataFrame 并写入文件。
+        Persist results (list[dict]) to CSV or Excel based on file extension.
+        If output_path is None or empty, raises ValueError.
         """
+        if not output_path:
+            raise ValueError("output_path is required for saving results.")
+
         if not self.results:
             logger.warning("No data to save.")
+            # Still create parent dir so debug pages can be written consistently
+            ensure_parent_dir(output_path)
             return
 
         df = pd.DataFrame(self.results)
-        ext = output_path.split(".")[-1].lower()
-        if ext in ("csv",):
-            df.to_csv(output_path, index=False)
-        elif ext in ("xlsx", "xls"):
+        ensure_parent_dir(output_path)
+        ext = os.path.splitext(output_path)[1].lower().lstrip('.')
+
+        if ext == 'csv' or ext == '':
+            df.to_csv(output_path, index=False, encoding='utf-8')
+        elif ext in ('xls', 'xlsx'):
             df.to_excel(output_path, index=False)
         else:
-            raise ValueError(f"Unsupported format: {ext}")
+            raise ValueError(f"Unsupported output format: {ext}")
+
         logger.info(f"Saved {len(self.results)} records to {output_path}")
