@@ -1,27 +1,22 @@
-# Climate Litigation Database 爬虫示例配置
 crawler_class: examples.climate_lit_crawler.ClimateLitCrawler
 
-site_name: climate_lit
-list_url: https://www.law.gwu.edu/climate-litigation-database/load-more
-list_method: POST
-list_payload:
-  offset: 0
-  limit: 20
-list_selector: "div.case-entry"   # 每个案例的容器
-load_more:
-  enabled: true
-  step: 2                        # 每次加载 2 条
-  max_items: 2                  # 最多加载 2 条（可根据需要调整）
-
-detail_method: GET
+start_url: "https://climatecasechart.com/search/"
+list_selector: "article"          # use a safe selector; avoid invalid patterns like "article.post-*.case_bundle"
 detail_selectors:
-  title: "h1.node-title"
-  filed_date: ".field--name-field-filed p"
-  status: ".field--name-field-status p"
-  court: ".field--name-field-court p"
-  documents: ".field--name-field-documents a"  # 如果是多个 document，后面解析时做 list
+  title: "h1.entry-title"
+  filed_date: "div.field--name-field-filed span.highlight"
+  status: "div.field--name-field-status span.highlight"
+  court: "div.field--name-field-court span.highlight"
+  description: "div.field--name-field-summary p"
 
-concurrency: 4
+concurrency: 2
 rate_limit: 1
-output_path: data/climate_lit.xlsx
-output_format: xlsx
+
+output_path: data/climate_cases.csv
+output_format: csv
+
+debug_page: data/debug_page1.html
+
+pagination:
+  start_page: 1
+  max_pages: 1
