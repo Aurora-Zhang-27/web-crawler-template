@@ -1,40 +1,50 @@
+# core/utils.py
 import time
 import logging
 from functools import wraps
+from typing import Callable, Any, Tuple, Type
 
-# 配置全局日志格式
-logging.basicConfig(
-    format="%(asctime)s %(levelname)s %(message)s",
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+# Basic logger configuration used across the project
+logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
+logger = logging.getLogger("webcrawler")
+
+def ensure_parent_dir(path: str) -> None:
+    """
+    Create parent directory for a given path if it does not exist.
+    Works for files (creates dirname) and for directories (if path ends with '/').
+    """
+    if not path:
+        return
+    parent = None
+    if path.endswith('/') or path.endswith('\\'):
+        parent = path
+    else:
+        parent = __import__('os').path.dirname(path)
+    if parent:
+        __import__('os').makedirs(parent, exist_ok=True)
 
 def rate_limit(seconds: float):
     """
-    调用前强制 sleep 指定秒数，用于限速。
-    用法：
-        @rate_limit(1.0)
-        def fetch(...):
-            ...
+    Decorator to sleep for `seconds` before calling the function.
+    Useful to throttle requests.
     """
-    def decorator(func):
+    def deco(func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            logger.debug(f"Rate limiting: sleeping {seconds} seconds")
-            time.sleep(seconds)
+            if seconds and seconds > 0:
+                logger.debug(f"Rate limit: sleeping {seconds} seconds")
+                time.sleep(seconds)
             return func(*args, **kwargs)
         return wrapper
-    return decorator
+    return deco
 
-def retry(times: int = 3, exceptions: tuple = (Exception,)):
+
+def retry(times: int = 3, exceptions: Tuple[Type[BaseException], ...] = (Exception,)):
     """
-    出错时自动重试。
-    用法：
-        @retry(times=5, exceptions=(ValueError, IOError))
-        def fetch(...):
-            ...
+    Simple retry decorator. Retries the wrapped function up to `times` when one of the
+    specified exceptions is raised. After final failure, re-raises the last exception.
     """
-    def decorator(func):
+    def deco(func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
             last_exc = None
@@ -44,7 +54,7 @@ def retry(times: int = 3, exceptions: tuple = (Exception,)):
                 except exceptions as e:
                     last_exc = e
                     logger.warning(f"Attempt {attempt}/{times} failed: {e}")
-            logger.error(f"All {times} attempts failed.")
+            logger.error(f"All {times} attempts failed for function {func.__name__}")
             raise last_exc
         return wrapper
-    return decorator
+    return deco
